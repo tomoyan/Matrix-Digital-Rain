@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Maximize2,
   Minimize2,
@@ -51,37 +51,11 @@ export function ControlPanel({
 }: ControlPanelProps) {
   const palette = resolvePalette(settings);
   const [hexDraft, setHexDraft] = useState(palette.accentHex.toUpperCase());
-  const [volumeBarOpen, setVolumeBarOpen] = useState(settings.audioEnabled);
-  const audioSectionRef = useRef<HTMLDivElement | null>(null);
+  const [audioHovered, setAudioHovered] = useState(false);
 
   useEffect(() => {
     setHexDraft(palette.accentHex.toUpperCase());
   }, [palette.accentHex]);
-
-  useEffect(() => {
-    setVolumeBarOpen(settings.audioEnabled);
-  }, [settings.audioEnabled]);
-
-  useEffect(() => {
-    if (!open || !volumeBarOpen) return;
-
-    const handleOutsideVolumeBar = (e: PointerEvent) => {
-      const target = e.target as Node | null;
-      if (
-        audioSectionRef.current &&
-        target &&
-        audioSectionRef.current.contains(target)
-      ) {
-        return;
-      }
-      setVolumeBarOpen(false);
-    };
-
-    window.addEventListener('pointerdown', handleOutsideVolumeBar);
-    return () => {
-      window.removeEventListener('pointerdown', handleOutsideVolumeBar);
-    };
-  }, [open, volumeBarOpen]);
 
   if (!open) return null;
 
@@ -173,26 +147,18 @@ export function ControlPanel({
 
       {/* Ambient Audio (CRT Hum + Digital Clicks) */}
       <div
-        ref={audioSectionRef}
+        onPointerEnter={() => setAudioHovered(true)}
+        onPointerLeave={() => setAudioHovered(false)}
         className="py-4 border-b border-white/10"
       >
         <div className="flex items-center justify-between gap-3">
-          <button
-            type="button"
-            onClick={() => {
-              if (settings.audioEnabled) {
-                setVolumeBarOpen((v) => !v);
-              } else {
-                onChange({ audioEnabled: true });
-                setVolumeBarOpen(true);
-              }
-            }}
-            className="flex items-center gap-2.5 min-w-0 text-left focus-visible:outline-2 focus-visible:outline-white rounded-md"
-          >
+          <div className="flex items-center gap-2.5 min-w-0">
             {settings.audioEnabled ? (
               <Volume2
                 className="h-4 w-4 shrink-0 text-zinc-200 transition-colors"
-                style={volumeBarOpen ? { color: palette.accentHex } : undefined}
+                style={
+                  audioHovered ? { color: palette.accentHex } : undefined
+                }
               />
             ) : (
               <VolumeX className="h-4 w-4 shrink-0 text-zinc-500" />
@@ -203,11 +169,11 @@ export function ControlPanel({
               </div>
               <div className="text-[11px] text-zinc-400 truncate">
                 {settings.audioEnabled
-                  ? `Unmuted · ${Math.round(settings.audioVolume * 100)}%`
+                  ? `Unmuted · ${Math.round(settings.audioVolume * 100)}% (hover for volume)`
                   : 'Muted · CRT hum & clicks'}
               </div>
             </div>
-          </button>
+          </div>
 
           {/* Mute / Unmute Switch Button */}
           <button
@@ -217,11 +183,7 @@ export function ControlPanel({
             aria-label={
               settings.audioEnabled ? 'Mute ambient sound' : 'Unmute ambient sound'
             }
-            onClick={() => {
-              const next = !settings.audioEnabled;
-              onChange({ audioEnabled: next });
-              setVolumeBarOpen(next);
-            }}
+            onClick={() => onChange({ audioEnabled: !settings.audioEnabled })}
             className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border transition-colors focus-visible:outline-2 focus-visible:outline-white ${
               settings.audioEnabled
                 ? 'border-white/25 bg-white/20'
@@ -242,8 +204,8 @@ export function ControlPanel({
           </button>
         </div>
 
-        {/* Vertical sound volume bar displayed when unmuted and not dismissed */}
-        {settings.audioEnabled && volumeBarOpen && (
+        {/* Vertical sound volume bar displayed when unmuted and hovered */}
+        {settings.audioEnabled && audioHovered && (
           <div className="mt-3 flex items-center justify-between gap-4 rounded-xl border border-white/10 bg-black/45 px-4 py-2">
             <div className="space-y-1">
               <div className="text-xs font-medium text-zinc-200">

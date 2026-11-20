@@ -131,9 +131,10 @@ interface FloatingAudioSwitchProps {
 
 /**
  * Floating bottom-right audio switch button:
- * - Toggles between Muted and Unmuted.
- * - When Unmuted, displays a vertical sound volume bar directly above the button.
- * - Clicking or tapping outside the vertical volume bar hides the bar while keeping audio unmuted.
+ * - Clicking the button toggles between Muted and Unmuted.
+ * - When Unmuted, hovering over the audio icon (or the volume bar above it)
+ *   displays the vertical sound volume bar, and moving the pointer away hides it
+ *   and returns the icon to its default color.
  */
 export function FloatingAudioSwitch({
   audioEnabled,
@@ -143,54 +144,28 @@ export function FloatingAudioSwitch({
   accentHex,
   accentGlow,
 }: FloatingAudioSwitchProps) {
-  const [barVisible, setBarVisible] = useState(false);
-  const containerRef = useRef<HTMLDivElement | null>(null);
-
-  // Automatically show the vertical volume bar whenever audio transitions to unmuted,
-  // and hide it whenever audio is muted.
-  useEffect(() => {
-    setBarVisible(audioEnabled);
-  }, [audioEnabled]);
-
-  // Hide the vertical volume bar when clicking or tapping anywhere outside of it
-  useEffect(() => {
-    if (!barVisible) return;
-
-    const handleOutsidePointerDown = (e: PointerEvent) => {
-      const target = e.target as Node | null;
-      if (containerRef.current && target && containerRef.current.contains(target)) {
-        return;
-      }
-      setBarVisible(false);
-    };
-
-    window.addEventListener('pointerdown', handleOutsidePointerDown);
-    return () => {
-      window.removeEventListener('pointerdown', handleOutsidePointerDown);
-    };
-  }, [barVisible]);
-
-  const isHighlighted = audioEnabled && barVisible;
+  const [isHovered, setIsHovered] = useState(false);
+  const showBar = audioEnabled && isHovered;
 
   return (
     <div
-      ref={containerRef}
       data-matrix-ui="true"
-      onPointerEnter={() => {
-        if (audioEnabled) setBarVisible(true);
-      }}
+      onPointerEnter={() => setIsHovered(true)}
+      onPointerLeave={() => setIsHovered(false)}
       className="relative flex flex-col items-center"
     >
-      {/* Vertical volume bar displayed above the switch when unmuted and not dismissed */}
-      {isHighlighted && (
-        <div className="mb-2 w-11 rounded-xl border border-white/14 bg-black/75 backdrop-blur-md shadow-xl">
-          <VerticalVolumeBar
-            volume={volume}
-            onChange={onVolumeChange}
-            accentHex={accentHex}
-            accentGlow={accentGlow}
-            compact
-          />
+      {/* Vertical volume bar displayed above the switch only while hovered and unmuted */}
+      {showBar && (
+        <div className="pb-2">
+          <div className="w-11 rounded-xl border border-white/14 bg-black/75 backdrop-blur-md shadow-xl">
+            <VerticalVolumeBar
+              volume={volume}
+              onChange={onVolumeChange}
+              accentHex={accentHex}
+              accentGlow={accentGlow}
+              compact
+            />
+          </div>
         </div>
       )}
 
@@ -203,12 +178,12 @@ export function FloatingAudioSwitch({
         title={audioEnabled ? 'Mute audio (M)' : 'Unmute audio (M)'}
         onClick={onToggle}
         className={`flex h-11 w-11 items-center justify-center rounded-xl border backdrop-blur-md transition-colors focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-white ${
-          isHighlighted
+          showBar
             ? 'border-white/25 bg-black/80 text-white'
             : 'border-white/12 bg-black/55 text-zinc-200 hover:bg-black/80 hover:text-white'
         }`}
         style={
-          isHighlighted
+          showBar
             ? {
                 borderColor: accentHex,
                 boxShadow: `0 0 12px ${accentGlow}`,
@@ -219,7 +194,7 @@ export function FloatingAudioSwitch({
         {audioEnabled ? (
           <Volume2
             className="h-4 w-4 transition-colors"
-            style={isHighlighted ? { color: accentHex } : undefined}
+            style={showBar ? { color: accentHex } : undefined}
           />
         ) : (
           <VolumeX className="h-4 w-4" />

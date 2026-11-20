@@ -25,7 +25,7 @@ Click the **Settings** button in the bottom-right corner (or press `C`) to open 
 
 ### Ambient Sound
 - **Mute / Unmute Switch**: Turns on a procedural background sound layer featuring a warm CRT monitor hum and rhythmic digital clicking sounds.
-- **Vertical Sound Volume Bar**: Appears automatically whenever audio is unmuted so you can drag up or down to set the volume (`5%`–`100%`). Clicking or tapping outside the volume bar hides it and returns the audio icon to its default color.
+- **Vertical Sound Volume Bar**: Hovering over the unmuted audio icon displays a vertical volume bar (`5%`–`100%`) so you can drag up or down to adjust the level. Moving your pointer away automatically hides the volume bar and returns the audio icon to its default color.
 
 ### Rain Color
 - **Preset Themes**: Switch between **Classic Green**, **Amber**, **Blue**, **Red**, **Teal**, and **Violet**.
